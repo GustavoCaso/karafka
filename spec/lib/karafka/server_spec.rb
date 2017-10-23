@@ -13,6 +13,8 @@ RSpec.describe Karafka::Server do
         expect(Karafka::App).to receive(:run!)
         expect(Karafka::Fetcher).to receive(:new).and_return(runner)
         expect(runner).to receive(:fetch_loop)
+
+        expect(Karafka::Process.instance).to receive(:on_sighup)
         expect(Karafka::Process.instance).to receive(:on_sigint)
         expect(Karafka::Process.instance).to receive(:on_sigquit)
         expect(Karafka::Process.instance).to receive(:on_sigterm)
@@ -23,9 +25,24 @@ RSpec.describe Karafka::Server do
       end
     end
 
+    context 'sighup' do
+      before do
+        expect(Karafka::Process.instance).to receive(:supervise)
+        expect(Karafka::Process.instance).to receive(:on_sigint)
+        expect(Karafka::Process.instance).to receive(:on_sigquit)
+        expect(Karafka::Process.instance).to receive(:on_sigterm)
+        expect(Karafka::App).to receive(:stop!)
+      end
+
+      it 'defines a proper action for sigint' do
+        expect(Karafka::Process.instance).to receive(:on_sighup).and_yield
+      end
+    end
+
     context 'sigint' do
       before do
         expect(Karafka::Process.instance).to receive(:supervise)
+        expect(Karafka::Process.instance).to receive(:on_sighup)
         expect(Karafka::Process.instance).to receive(:on_sigquit)
         expect(Karafka::Process.instance).to receive(:on_sigterm)
         expect(Karafka::App).to receive(:stop!)
@@ -39,6 +56,7 @@ RSpec.describe Karafka::Server do
     context 'sigquit' do
       before do
         expect(Karafka::Process.instance).to receive(:supervise)
+        expect(Karafka::Process.instance).to receive(:on_sighup)
         expect(Karafka::Process.instance).to receive(:on_sigint)
         expect(Karafka::Process.instance).to receive(:on_sigterm)
         expect(Karafka::App).to receive(:stop!)
@@ -52,6 +70,7 @@ RSpec.describe Karafka::Server do
     context 'sigterm' do
       before do
         expect(Karafka::Process.instance).to receive(:supervise)
+        expect(Karafka::Process.instance).to receive(:on_sighup)
         expect(Karafka::Process.instance).to receive(:on_sigint)
         expect(Karafka::Process.instance).to receive(:on_sigquit)
         expect(Karafka::App).to receive(:stop!)

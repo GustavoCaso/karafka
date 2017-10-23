@@ -13,9 +13,13 @@ module Karafka
       # Method which runs app
       def run
         @consumer_threads = Concurrent::Array.new
-        bind_on_sigint
-        bind_on_sigquit
-        bind_on_sigterm
+
+        %i[sigint sigquit sigterm].each do |s|
+          process.send("on_#{s}", &method(:bind_exit_signals))
+        end
+
+        process.on_sighup(&method(:bind_restart_signals))
+
         start_supervised
       end
 
@@ -28,24 +32,19 @@ module Karafka
 
       private
 
+      # When receiving a signal to exit, what do we do?
+      def bind_exit_signals
+        Karafka::App.stop!
+      end
+
+      # When receiving a signal to restart, what do we do?
+      def bind_restart_signals
+        Karafka::App.stop!
+      end
+
       # @return [Karafka::Process] process wrapper instance used to catch system signal calls
       def process
         Karafka::Process.instance
-      end
-
-      # What should happen when we decide to quit with sigint
-      def bind_on_sigint
-        process.on_sigint { Karafka::App.stop! }
-      end
-
-      # What should happen when we decide to quit with sigquit
-      def bind_on_sigquit
-        process.on_sigquit { Karafka::App.stop! }
-      end
-
-      # What should happen when we decide to quit with sigterm
-      def bind_on_sigterm
-        process.on_sigterm { Karafka::App.stop! }
       end
 
       # Starts Karafka with a supervision

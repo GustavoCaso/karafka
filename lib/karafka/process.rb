@@ -7,9 +7,7 @@ module Karafka
     include Singleton
 
     # Signal types that we handle
-    HANDLED_SIGNALS = %i[
-      SIGINT SIGQUIT SIGTERM
-    ].freeze
+    HANDLED_SIGNALS = %i[SIGHUP SIGINT SIGQUIT SIGTERM].freeze
 
     HANDLED_SIGNALS.each do |signal|
       # Assigns a callback that will happen when certain signal will be send
